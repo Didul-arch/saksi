@@ -15,8 +15,13 @@ export function describeScope(scope: ReviewScope): string {
     case 'staged':
       return 'perubahan yang akan di-commit';
     case 'files':
-      return `${scope.paths.length} file terpilih`;
+      return scope.paths.length === 1 ? `file ${scope.paths[0]}` : `${scope.paths.length} file terpilih`;
     case 'selection':
       return `${scope.path} baris ${scope.startLine}–${scope.endLine}`;
   }
+}
+
+/** Identity used to decide whether a send preview must be shown again (UR-39). */
+export function scopeKey(scope: ReviewScope): string {
+  return scope.kind;
 }
