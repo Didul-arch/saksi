@@ -199,4 +199,28 @@ describe('extension (mocked VS Code)', () => {
     await settle();
     expect(live()).toHaveLength(0);
   });
+
+  it('lists models with the key just entered during first-time setup', async () => {
+    let auth = '';
+    const models = http.createServer((req, res) => {
+      auth = req.headers.authorization ?? '';
+      if (auth !== 'Bearer sk-test') { res.statusCode = 401; res.end('{}'); return; }
+      res.end(JSON.stringify({ data: [{ id: 'deepseek-chat' }] }));
+    });
+    await new Promise<void>(resolve => models.listen(0, '127.0.0.1', resolve));
+    const url = `http://127.0.0.1:${(models.address() as AddressInfo).port}/v1/chat/completions`;
+    try {
+      start(repoWithChange());
+      delete mock.settings['saksi.endpoint'];
+      delete mock.settings['saksi.model'];
+      mock.inputs.push(url, 'sk-test');
+      mock.picks.push('Pilih dari daftar model layanan', 'deepseek-chat');
+      await vscode.commands.executeCommand('saksi.configure');
+      expect(auth).toBe('Bearer sk-test');
+      expect(mock.settings['saksi.model']).toBe('deepseek-chat');
+      expect(mock.settings['saksi.endpoint']).toBe(url);
+    } finally {
+      await new Promise<void>(resolve => models.close(() => resolve()));
+    }
+  });
 });

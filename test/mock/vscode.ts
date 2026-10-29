@@ -100,6 +100,9 @@ export const mock = {
   watchers: [] as { change: EventEmitter<Uri> }[],
   textDocuments: [] as unknown[],
   shown: [] as string[],
+  /** Scripted answers for input boxes (in order) and quick picks (matched by label). */
+  inputs: [] as (string | undefined)[],
+  picks: [] as string[],
   reset(): void {
     this.settings = {};
     this.workspaceFolders = [];
@@ -113,6 +116,8 @@ export const mock = {
     this.watchers = [];
     this.textDocuments = [];
     this.shown = [];
+    this.inputs = [];
+    this.picks = [];
   },
 };
 
@@ -138,8 +143,11 @@ export const window = {
   showInformationMessage: answer,
   showWarningMessage: answer,
   showErrorMessage: answer,
-  showInputBox: async () => undefined,
-  showQuickPick: async () => undefined,
+  showInputBox: async () => mock.inputs.shift(),
+  showQuickPick: async <T extends { label: string }>(items: T[] | Thenable<T[]>) => {
+    const list = await items;
+    return list.find(item => item.label === mock.picks[0]) && list.find(item => item.label === mock.picks.shift());
+  },
   showTextDocument: async (doc: { uri: Uri }) => {
     mock.shown.push(doc.uri.fsPath);
     return { selection: undefined, revealRange: () => undefined, document: doc };
