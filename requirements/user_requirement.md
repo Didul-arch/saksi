@@ -30,7 +30,7 @@ Dokumen ini menggambarkan pengalaman produk yang ingin dicapai. Isinya bukan daf
 
 ## 1. Tujuan produk
 
-Saksi membantu developer menemukan kesalahan dan keraguan yang relevan pada perubahan kode mereka, memahami alasannya, dan menentukan tindakan berikutnya tanpa harus meninggalkan pekerjaan utama di editor.
+Saksi adalah **alat belajar pemrograman**. Saksi membantu developer menemukan kesalahan dan keraguan yang relevan pada perubahan kode mereka, **memahami konsep di baliknya**, dan menentukan tindakan berikutnya tanpa harus meninggalkan pekerjaan utama di editor.
 
 Pengguna menulis kode, memulai review melalui satu tindakan, lalu menerima temuan yang menunjuk bagian kode secara jelas. Setiap temuan menjelaskan apa yang diamati, kemungkinan dampaknya, bukti yang mendukungnya, dan bagian yang masih belum diketahui.
 
@@ -41,6 +41,7 @@ Pengguna memakai layanan dan model AI pilihannya sendiri. Pengguna tetap memegan
 - Pengguna menemukan masalah yang relevan sebelum perubahan diteruskan ke proses kerja berikutnya.
 - Pengguna memahami alasan suatu bagian kode dipersoalkan, termasuk dampaknya pada bagian lain.
 - Pengguna dapat memeriksa bukti dan menolak koreksi yang tidak sesuai.
+- Pengguna mempelajari konsep di balik setiap temuan, sehingga kesalahan yang sama tidak terulang.
 - Pengguna mendapat bantuan belajar tanpa terus-menerus menerima teguran yang tidak perlu.
 - Pengguna mengetahui batas pemeriksaan sehingga hasil kosong tidak menimbulkan rasa aman yang keliru.
 - Pengguna dapat bekerja dengan tenang tanpa kehilangan kontrol terhadap kode, biaya penggunaan, dan informasi proyek.
@@ -49,9 +50,11 @@ Pengguna memakai layanan dan model AI pilihannya sendiri. Pengguna tetap memegan
 
 | Pengguna | Kebutuhan utama | Situasi umum |
 | --- | --- | --- |
+| **Developer yang sedang mempelajari bahasa atau codebase (pengguna utama)** | Memahami aturan dan alasan suatu pola menjadi masalah. | Ragu tentang akses fungsi, penanganan error, atau penggunaan komponen proyek. |
 | Developer yang sedang mengimplementasikan perubahan | Menemukan kesalahan dan dampak lintas file ketika konteks pekerjaan masih segar. | Selesai menulis fungsi atau mengubah beberapa file terkait. |
-| Developer yang sedang mempelajari bahasa atau codebase | Memahami aturan dan alasan suatu pola menjadi masalah. | Ragu tentang akses fungsi, penanganan error, atau penggunaan komponen proyek. |
 | Developer berpengalaman yang ingin pemeriksaan tambahan | Mendapat temuan yang bernilai dengan sedikit gangguan dan sedikit tuduhan keliru. | Memeriksa pekerjaan sebelum commit atau meminta review rekan kerja. |
+
+Karena tujuannya belajar, penjelasan selalu edukatif: inti masalah dulu, lalu konsep yang mendasarinya, secara ringkas. Developer berpengalaman tetap terbantu, tetapi bukan sasaran utama.
 
 Fokus awal yang diusulkan adalah developer Go di VS Code. Bahasa lain dapat ditambahkan bertahap. Pengguna harus mengetahui bahasa dan jenis pemeriksaan yang tersedia; dukungan terhadap semua bahasa tidak diasumsikan.
 
@@ -362,6 +365,7 @@ Ukuran berikut adalah usulan evaluasi manfaat produk. Target angka ditetapkan se
 | Sedikit tuduhan keliru | Jumlah temuan yang terbukti mempersoalkan kode yang sebenarnya benar dalam kondisi yang dibahas. | Bedakan dugaan yang wajar dari klaim pasti yang salah. |
 | Bug penting tidak banyak terlewat | Proporsi masalah yang diketahui pada contoh evaluasi tetapi tidak ditemukan dalam cakupan review. | Evaluasi tetap mencakup contoh tanpa bug agar reviewer tidak didorong selalu menuduh. |
 | Refinement menambah manfaat | Perubahan jumlah temuan benar, temuan keliru, dan masalah yang terlewat sebelum serta sesudah refinement. | Mengurangi jumlah temuan saja tidak dianggap perbaikan bila masalah penting ikut terhapus. |
+| Pengguna belajar konsepnya | Kemampuan pengguna menjelaskan ulang konsep di balik temuan dan menghindari kesalahan yang sama pada perubahan berikutnya. | Dinilai dari pemahaman dan perubahan perilaku, bukan jumlah temuan yang dibaca. |
 | Penjelasan mudah dipahami | Kemampuan pengguna menjelaskan kembali masalah, bukti, ketidakpastian, dan langkah berikutnya. | Dinilai dari pemahaman, bukan hanya panjang atau kelancaran jawaban AI. |
 | Review membantu alur kerja | Waktu dan usaha pengguna untuk mencapai keputusan atas suatu temuan. | Pertimbangkan gangguan, waktu menunggu, serta kebutuhan mencari konteks secara manual. |
 | Penggunaan model terkendali | Kesesuaian kedalaman, waktu, dan penggunaan layanan dengan pilihan pengguna. | Pengukuran mempertimbangkan variasi model dan layanan yang dipakai. |
