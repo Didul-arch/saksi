@@ -3,7 +3,7 @@
 | Informasi | Keterangan |
 | --- | --- |
 | Branch | `feature/terse-style` |
-| Status | **Draft, menunggu keputusan** K2–K8 (bagian 6). K1 sudah diputuskan. Belum ada kode tambahan. |
+| Status | **Diimplementasikan.** K1–K8 diputuskan sesuai usulan di bagian 6. |
 | Prinsip | YAGNI: tambahkan hanya yang dibutuhkan requirement di bawah. |
 
 ## 1. Kenapa

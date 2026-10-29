@@ -18,6 +18,7 @@ export function toMarkdown(phase: Phase, findings: Finding[], snapshot?: Snapsho
     if (f.feedback) tags.push(`ditandai ${FEEDBACK_LABEL[f.feedback.kind].toLowerCase()}`);
     out.push(`*${tags.join(' · ')}* — \`${f.location.path}:${f.location.startLine}\``, '');
     out.push(`- **Pengamatan:** ${f.observation}`);
+    if (f.concept) out.push(`- **Konsep:** ${f.concept}`);
     if (f.inference) out.push(`- **Alasan & dampak:** ${f.inference}`);
     if (f.confirmation) out.push(`- **Dasar konfirmasi:** ${f.confirmation.source} baris ${f.confirmation.line}: ${f.confirmation.message}`);
     if (f.missingContext) out.push(`- **Yang belum diketahui:** ${f.missingContext}`);

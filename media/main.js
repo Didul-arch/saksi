@@ -96,6 +96,7 @@ function findingCard(f, index, selectedId) {
   card.append(loc);
   for (const node of [
     field('Pengamatan', f.observation),
+    field('Konsep', f.concept),
     field('Alasan & dampak', f.inference),
     field('Tingkat dampak', f.impactReason),
     field('Dasar konfirmasi', f.confirmation),

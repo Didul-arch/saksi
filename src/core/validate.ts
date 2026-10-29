@@ -58,6 +58,7 @@ export function parseFinding(value: unknown, snapshot: Snapshot): Finding | null
     impact: IMPACTS.includes(value.impact as Impact) ? value.impact as Impact : 'medium',
     impactReason: clean(value.impactReason, 500),
     observation,
+    concept: clean(value.concept, 1000),
     inference: clean(value.inference),
     missingContext: clean(value.missingContext, 1000),
     suggestion: clean(value.suggestion, 1500),

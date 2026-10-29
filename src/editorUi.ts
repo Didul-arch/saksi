@@ -75,6 +75,7 @@ function hover(f: Finding): vscode.MarkdownString {
   md.supportHtml = false;
   md.appendText(`${CERTAINTY_LABEL[f.certainty]} · ${IMPACT_LABEL[f.impact]}${f.unrefined ? ' · belum diperiksa ulang' : ''}\n${f.title}\n\n`);
   md.appendText(`Pengamatan: ${f.observation}\n\n`);
+  if (f.concept) md.appendText(`Konsep: ${f.concept}\n\n`);
   if (f.inference) md.appendText(`Alasan & dampak: ${f.inference}\n\n`);
   if (f.missingContext) md.appendText(`Yang belum diketahui: ${f.missingContext}\n\n`);
   md.appendText('Buka panel Saksi untuk bukti, pertanyaan, dan tanggapan.');

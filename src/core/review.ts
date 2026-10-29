@@ -1,14 +1,14 @@
 // One review run: diagram 04 (start), 05 (pipeline) and 06 (refinement), without any VS Code dependency.
 
 import { applyRemembered, notesFor, type RememberedFeedback } from './feedback';
-import { reviewMessages, rewriteMessages, type ChatMessage, type PromptContext } from './prompts';
+import { reviewMessages, type ChatMessage, type PromptContext } from './prompts';
 import { parseJsonContent, type ModelReply } from './provider';
 import { ROUNDS_BY_DEPTH, refine, type StopReason } from './refine';
 import { goCandidates } from './related';
 import { excludeHits, scanSnapshot } from './sensitive';
 import { addRelated, collect, isPartial, unchanged, type CollectOptions } from './snapshot';
 import { finalPhase, type Phase } from './status';
-import { applyRewrite, enforceLimits, styleIssues, vocabulary } from './style';
+import { enforceLimits } from './style';
 import { errorMessage, isAbort } from './text';
 import type { Depth, DiagnosticInfo, Finding, Revision, SensitiveHit, Snapshot, Usage } from './types';
 import { validateFindings } from './validate';
@@ -149,7 +149,7 @@ export async function runReview(deps: ReviewDeps): Promise<ReviewResult> {
       result.findings = result.findings.map(f => ({ ...f, unrefined: true }));
     }
 
-    result.findings = await polish(result.findings, snapshot, deps, ask, phase);
+    result.findings = result.findings.map(enforceLimits);
 
     if (!(await unchanged(snapshot))) {
       phase('stale', 'Kode berubah selama review. Hasil tidak ditampilkan sebagai pemeriksaan terbaru; jalankan review lagi.');
@@ -167,34 +167,6 @@ export async function runReview(deps: ReviewDeps): Promise<ReviewResult> {
     phase('failed', `${errorMessage(error)} Ini bukan hasil review bersih.`);
     return result;
   }
-}
-
-/**
- * One rewrite request for findings that break the writing rules, then a hard trim so limits always hold.
- * A failed rewrite is not an error: the trimmed original stays.
- */
-async function polish(findings: Finding[], snapshot: Snapshot, deps: ReviewDeps, ask: (m: ChatMessage[]) => Promise<unknown>, phase: (p: Phase, n: string) => void): Promise<Finding[]> {
-  const style = deps.ctx.preferences.style;
-  const needs = findings
-    .map(finding => ({ finding, problems: styleIssues(finding, style).map(i => `${i.field}: ${i.problem}`) }))
-    .filter(item => item.problems.length);
-  let out = findings;
-  if (needs.length) {
-    phase('refining', `Merapikan bahasa ${needs.length} temuan…`);
-    try {
-      const raw = await ask(rewriteMessages(needs, deps.ctx.preferences)) as { rewrites?: unknown };
-      const rewrites = new Map<string, unknown>();
-      for (const item of Array.isArray(raw?.rewrites) ? raw.rewrites : []) {
-        const id = (item as Record<string, unknown> | null)?.id;
-        if (typeof id === 'string') rewrites.set(id, item);
-      }
-      const words = vocabulary(snapshot);
-      out = findings.map(f => rewrites.has(f.id) ? applyRewrite(f, rewrites.get(f.id), snapshot, style, words) : f);
-    } catch (error) {
-      if (isAbort(error, deps.signal)) throw error;
-    }
-  }
-  return out.map(f => enforceLimits(f, style));
 }
 
 function cancelled(result: ReviewResult, phase: (p: Phase, n: string) => void, signal: AbortSignal): ReviewResult {

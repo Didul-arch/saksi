@@ -380,7 +380,7 @@ export class Controller implements vscode.Disposable {
       this.dropped = [...this.dropped, { finding, revision }];
       return `Penilaian: ${REVISION_LABEL.dropped}. ${revision.reason}`;
     }
-    const updated = enforceLimits({ ...applied.finding, revisions: [...finding.revisions, revision] }, preferences().style);
+    const updated = enforceLimits({ ...applied.finding, revisions: [...finding.revisions, revision] });
     this.findings = this.findings.map(f => f.id === finding.id ? updated : f);
     return `Penilaian: ${REVISION_LABEL[revision.outcome]}. ${revision.reason}`;
   }
