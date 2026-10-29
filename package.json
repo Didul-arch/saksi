@@ -1,8 +1,8 @@
 {
   "name": "saksi",
   "displayName": "Saksi — Review Companion",
-  "description": "Review your code changes in VS Code with your own AI model, checkable evidence, and honest uncertainty.",
-  "version": "0.0.1",
+  "description": "Review your code changes in VS Code with your own AI model, checkable evidence, refinement, and honest uncertainty.",
+  "version": "0.1.0",
   "publisher": "saksi-local",
   "private": true,
   "engines": {
@@ -27,19 +27,119 @@
     "commands": [
       {
         "command": "saksi.review",
-        "title": "Saksi: Review Changes"
+        "title": "Review Changes",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.reviewFile",
+        "title": "Review Active File",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.reviewSelection",
+        "title": "Review Selection",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.reviewStaged",
+        "title": "Review Staged Changes",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.setIntent",
+        "title": "Set Change Intent",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.cancel",
+        "title": "Stop Review",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.clear",
+        "title": "Clear Review",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.show",
+        "title": "Show Companion",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.copySummary",
+        "title": "Copy Review Summary",
+        "category": "Saksi"
       },
       {
         "command": "saksi.configure",
-        "title": "Saksi: Configure Model"
+        "title": "Configure Model",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.setApiKey",
+        "title": "Set API Key",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.clearApiKey",
+        "title": "Clear API Key",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.testConnection",
+        "title": "Test Model Configuration",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.forgetFeedback",
+        "title": "Forget Remembered Feedback",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.showFinding",
+        "title": "Show Finding",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.askFinding",
+        "title": "Ask About Finding",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.markFinding",
+        "title": "Mark Finding",
+        "category": "Saksi"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "saksi.showFinding",
+          "when": "false"
+        },
+        {
+          "command": "saksi.askFinding",
+          "when": "false"
+        },
+        {
+          "command": "saksi.markFinding",
+          "when": "false"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "saksi.reviewSelection",
+          "when": "editorHasSelection && isWorkspaceTrusted",
+          "group": "saksi@1"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "saksi.review",
         "key": "ctrl+alt+i",
         "mac": "cmd+alt+i",
-        "when": "editorTextFocus && isWorkspaceTrusted"
+        "when": "isWorkspaceTrusted"
       }
     ],
     "viewsContainers": {
@@ -59,6 +159,150 @@
           "name": "Review Companion"
         }
       ]
+    },
+    "configuration": {
+      "title": "Saksi",
+      "properties": {
+        "saksi.endpoint": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "URL chat-completions lengkap (HTTPS, atau HTTP untuk localhost). Hanya dibaca dari User Settings agar repository tidak bisa mengalihkan kode ke layanan lain. Atur lewat **Saksi: Configure Model**."
+        },
+        "saksi.model": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Model ID yang diterima layananmu. Hanya dibaca dari User Settings."
+        },
+        "saksi.jsonMode": {
+          "type": "boolean",
+          "default": false,
+          "scope": "machine",
+          "description": "Kirim response_format: json_object. Aktifkan hanya jika layanan mendukungnya."
+        },
+        "saksi.timeoutSeconds": {
+          "type": "number",
+          "default": 90,
+          "minimum": 10,
+          "maximum": 600,
+          "description": "Batas waktu satu permintaan ke layanan model."
+        },
+        "saksi.reviewDepth": {
+          "type": "string",
+          "enum": [
+            "quick",
+            "standard",
+            "deep"
+          ],
+          "enumDescriptions": [
+            "Pemeriksaan awal saja, tanpa pemeriksaan ulang.",
+            "Satu putaran pemeriksaan ulang.",
+            "Sampai tiga putaran, berhenti lebih awal jika tidak ada informasi baru."
+          ],
+          "default": "standard",
+          "description": "Kedalaman review default. Bisa diganti per workspace dari panel."
+        },
+        "saksi.excludePaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Path atau folder (relatif repository) yang tidak boleh dikirim untuk review, refinement, maupun percakapan. Contoh: internal/private."
+        },
+        "saksi.projectRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Aturan atau konteks proyek yang relevan untuk review, satu aturan per item. Ikut dikirim ke layanan model."
+        },
+        "saksi.useProjectRules": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Pakai saksi.projectRules saat review."
+        },
+        "saksi.confirmBeforeSend": {
+          "type": "string",
+          "enum": [
+            "whenChanged",
+            "always"
+          ],
+          "enumDescriptions": [
+            "Tanya sebelum mengirim saat layanan, model, jenis cakupan, aturan, atau pengecualian berubah.",
+            "Selalu tanya sebelum mengirim."
+          ],
+          "default": "whenChanged",
+          "description": "Kapan Saksi meminta konfirmasi sebelum mengirim konteks. Temuan informasi sensitif selalu ditanyakan."
+        },
+        "saksi.maxContextChars": {
+          "type": "number",
+          "default": 140000,
+          "minimum": 10000,
+          "maximum": 500000,
+          "description": "Perkiraan anggaran karakter source + patch per review."
+        },
+        "saksi.maxChangedFiles": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Maksimal file berubah per review."
+        },
+        "saksi.maxRelatedFiles": {
+          "type": "number",
+          "default": 8,
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Maksimal file terkait (pemanggil/penggunaan) sebagai konteks."
+        },
+        "saksi.explanationStyle": {
+          "type": "string",
+          "enum": [
+            "concise",
+            "educational"
+          ],
+          "enumDescriptions": [
+            "Ringkas.",
+            "Lebih mendidik: jelaskan aturan atau konsep yang mendasari."
+          ],
+          "default": "concise",
+          "description": "Gaya penjelasan temuan."
+        },
+        "saksi.explanationLanguage": {
+          "type": "string",
+          "enum": [
+            "id",
+            "en"
+          ],
+          "enumDescriptions": [
+            "Bahasa Indonesia",
+            "English"
+          ],
+          "default": "id",
+          "description": "Bahasa penjelasan. Identifier kode tidak diterjemahkan."
+        },
+        "saksi.showOptionalSuggestions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Tampilkan saran opsional (gaya/perbaikan tanpa bukti kode salah)."
+        },
+        "saksi.inlineHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Tampilkan label singkat di samping baris yang dipersoalkan."
+        },
+        "saksi.showCompanion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Tampilkan maskot burung hantu di panel. Fungsi review tetap sama tanpa maskot."
+        }
+      }
     }
   },
   "scripts": {
@@ -74,11 +318,16 @@
   "devDependencies": {
     "@types/node": "^22.20.5",
     "@types/vscode": "1.96.0",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vitest": "^5.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Didul-arch/saksi"
   }
 }
