@@ -56,6 +56,7 @@ $('clear').addEventListener('click', () => post({ type: 'clear' }));
 
 function captureDrafts() {
   const drafts = {};
+  document.querySelectorAll('details[data-fold]').forEach(node => { drafts[`fold:${node.getAttribute('data-fold')}`] = /** @type {HTMLDetailsElement} */ (node).open; });
   document.querySelectorAll('[data-draft]').forEach(node => {
     const input = /** @type {HTMLInputElement} */ (node);
     drafts[input.dataset.draft || ''] = input.type === 'checkbox' ? input.checked : input.value;
@@ -65,6 +66,10 @@ function captureDrafts() {
 }
 
 function restoreDrafts({ drafts, focus }) {
+  document.querySelectorAll('details[data-fold]').forEach(node => {
+    const open = drafts[`fold:${node.getAttribute('data-fold')}`];
+    if (open !== undefined) /** @type {HTMLDetailsElement} */ (node).open = !!open || node.hasAttribute('data-selected');
+  });
   document.querySelectorAll('[data-draft]').forEach(node => {
     const input = /** @type {HTMLInputElement} */ (node);
     const value = drafts[input.dataset.draft || ''];
@@ -82,14 +87,22 @@ function restoreDrafts({ drafts, focus }) {
 
 const FEEDBACK = [['relevant', 'Relevan'], ['wrong', 'Keliru'], ['intentional', 'Disengaja'], ['deferred', 'Ditunda']];
 
-function findingCard(f, index, selectedId) {
-  const card = el('article', `finding ${f.certainty} ${f.group}`);
-  card.id = `finding-${f.id}`;
+// Cards fold to a one-line summary; details and chat also live inline in the editor.
+function findingCard(f, index, selectedId, total) {
+  const article = el('article', `finding ${f.certainty} ${f.group}`);
+  article.id = `finding-${f.id}`;
+  const card = /** @type {HTMLDetailsElement} */ (el('details', 'fold'));
+  card.dataset.fold = f.id;
+  card.open = selectedId === f.id || total === 1;
+  if (selectedId === f.id) card.dataset.selected = '';
+  const summary = el('summary');
+  card.append(summary);
+  article.append(card);
   const tags = el('p', 'tags');
   tags.append(el('span', 'badge', f.certaintyLabel), el('span', 'badge subtle', f.impactLabel));
   for (const flag of f.flags) tags.append(el('span', 'badge warn', flag));
   if (f.feedback) tags.append(el('span', 'badge subtle', `Ditandai: ${f.feedback.label}${f.feedback.remembered ? ' · diingat' : ''}`));
-  card.append(tags, el('h3', '', `${index + 1}. ${f.title}`));
+  summary.append(tags, el('h3', '', `${index + 1}. ${f.title}`));
 
   const loc = button(f.location, () => post({ type: 'open', id: f.id, index: -1 }), 'location', `Buka lokasi ${f.location}`);
   loc.dataset.focus = `open-${f.id}`;
@@ -183,22 +196,30 @@ function findingCard(f, index, selectedId) {
     chat.append(box, actions);
   }
   card.append(chat);
-  return card;
+  return article;
 }
 
-function group(title, items, selectedId, offset) {
+function group(title, items, selectedId, offset, total) {
   const section = el('section', 'group');
   section.append(el('h2', '', title));
-  items.forEach((f, i) => section.append(findingCard(f, offset + i, selectedId)));
+  items.forEach((f, i) => section.append(findingCard(f, offset + i, selectedId, total)));
   return section;
 }
 
 // --- Render
 
+// Pet expression per status (UR-58); the text status says the same thing.
+const MOOD = {
+  'awaiting-dirty': 'thinking', 'awaiting-confirm': 'thinking', 'reading-context': 'thinking', 'initial-check': 'thinking', refining: 'thinking',
+  'done-findings': 'alert', 'done-partial': 'alert', 'done-clean': 'happy',
+  failed: 'worried', unvalidated: 'worried', cancelled: 'worried', stale: 'worried',
+};
+
 window.addEventListener('message', ({ data: s }) => {
   const saved = captureDrafts();
   document.body.classList.toggle('busy', s.running);
-  $('pet').style.display = s.showCompanion ? '' : 'none';
+  document.body.classList.toggle('with-pet', s.showCompanion);
+  document.body.dataset.mood = MOOD[s.phase] || 'idle';
   $('configure').textContent = s.configured ? s.model : 'Atur layanan & model';
   $('phase').textContent = s.phaseLabel;
   $('note').textContent = s.note;
@@ -216,9 +237,9 @@ window.addEventListener('message', ({ data: s }) => {
   const open = s.findings.filter(f => f.group === 'open');
   const answered = s.findings.filter(f => f.group === 'answered');
   const stale = s.findings.filter(f => f.group === 'stale');
-  if (open.length) results.append(group('Perlu diperiksa', open, s.selectedId, 0));
-  if (answered.length) results.append(group('Sudah kamu tanggapi', answered, s.selectedId, open.length));
-  if (stale.length) results.append(group('Kedaluwarsa · kode sudah berubah', stale, s.selectedId, open.length + answered.length));
+  if (open.length) results.append(group('Perlu diperiksa', open, s.selectedId, 0, s.findings.length));
+  if (answered.length) results.append(group('Sudah kamu tanggapi', answered, s.selectedId, open.length, s.findings.length));
+  if (stale.length) results.append(group('Kedaluwarsa · kode sudah berubah', stale, s.selectedId, open.length + answered.length, s.findings.length));
 
   const dropped = /** @type {HTMLDetailsElement} */ ($('dropped'));
   dropped.hidden = !s.dropped.length;
