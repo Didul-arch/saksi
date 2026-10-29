@@ -1,0 +1,84 @@
+{
+  "name": "saksi",
+  "displayName": "Saksi — Review Companion",
+  "description": "Review your code changes in VS Code with your own AI model, checkable evidence, and honest uncertainty.",
+  "version": "0.0.1",
+  "publisher": "saksi-local",
+  "private": true,
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "saksi.review",
+        "title": "Saksi: Review Changes"
+      },
+      {
+        "command": "saksi.configure",
+        "title": "Saksi: Configure Model"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "saksi.review",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorTextFocus && isWorkspaceTrusted"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "saksi",
+          "title": "Saksi",
+          "icon": "media/owl.svg"
+        }
+      ]
+    },
+    "views": {
+      "saksi": [
+        {
+          "type": "webview",
+          "id": "saksi.companion",
+          "name": "Review Companion"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "package": "npm run build -- --production && vsce package --no-dependencies",
+    "vscode:prepublish": "npm run build -- --production"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/vscode": "1.96.0",
+    "@vscode/vsce": "^4.1.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.13.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  }
+}
