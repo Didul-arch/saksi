@@ -48,6 +48,7 @@ export function previewText(preview: SendPreview, target: SendTarget): string {
     `- Cakupan: ${describeScope(snapshot.scope)}`,
     `- Tujuan perubahan: ${target.intent ? JSON.stringify(target.intent) : '(kosong)'}`,
     `- Aturan proyek: ${target.rules.length}`,
+    `- Konteks proyek: ${snapshot.project ? `${snapshot.project.path} (${snapshot.project.text.length.toLocaleString('id-ID')} karakter)` : '(tidak ada README.md)'}`,
     `- Pengecualian: ${target.excludes.length ? target.excludes.join(', ') : '(tidak ada)'}`,
     `- Perkiraan ukuran: ${snapshot.used.toLocaleString('id-ID')} karakter source + patch`,
     '',

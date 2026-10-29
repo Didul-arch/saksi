@@ -18,6 +18,7 @@ export interface CollectOptions {
 
 export const DEFAULT_LIMITS = { maxContextChars: 140_000, maxChangedFiles: 24, maxRelatedFiles: 8 };
 const MAX_DELETED_PATCH = 20_000;
+const MAX_PROJECT_CHARS = 4_000;
 
 class SkipError extends Error {}
 
@@ -160,10 +161,23 @@ export async function collect(root: string, options: CollectOptions, signal?: Ab
       snapshot.skipped.push({ path: entry.path, reason: skipMessage(error), changed: true });
     }
   }
+  await addProject(snapshot, excludes);
   if (snapshot.deleted.length) {
     snapshot.notes.push(`${snapshot.deleted.length} file dihapus disertakan sebagai konteks penghapusan; temuan tidak dapat ditambatkan pada baris yang sudah tidak ada.`);
   }
   return snapshot;
+}
+
+/** README.md tells the reviewer what the project is for (UR-55, K2). Its absence is stated, not hidden (UA-29). */
+async function addProject(snapshot: Snapshot, excludes: readonly string[]): Promise<void> {
+  try {
+    const text = (await readSource(snapshot.root, 'README.md', excludes)).content.slice(0, MAX_PROJECT_CHARS);
+    if (!text.trim()) throw new SkipError('kosong');
+    snapshot.project = { path: 'README.md', text };
+    snapshot.used += text.length;
+  } catch {
+    snapshot.notes.push('Tujuan proyek tidak diketahui (tidak ada README.md yang bisa dibaca); penilaian hanya berdasarkan kode, tujuan perubahan, dan aturan proyek.');
+  }
 }
 
 function fitBudget(snapshot: Snapshot, cost: number, max: number): boolean {

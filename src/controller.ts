@@ -13,6 +13,7 @@ import { applyVerdict } from './core/refine';
 import { addUsage, emptyUsage, runReview, type ReviewResult } from './core/review';
 import type { ReviewScope } from './core/scope';
 import { markStale } from './core/staleness';
+import { enforceLimits } from './core/style';
 import { isRunning, PHASE_LABEL, type Phase } from './core/status';
 import { toMarkdown } from './core/summary';
 import { clean, errorMessage, hash, isAbort } from './core/text';
@@ -379,7 +380,7 @@ export class Controller implements vscode.Disposable {
       this.dropped = [...this.dropped, { finding, revision }];
       return `Penilaian: ${REVISION_LABEL.dropped}. ${revision.reason}`;
     }
-    const updated = { ...applied.finding, revisions: [...finding.revisions, revision] };
+    const updated = enforceLimits({ ...applied.finding, revisions: [...finding.revisions, revision] });
     this.findings = this.findings.map(f => f.id === finding.id ? updated : f);
     return `Penilaian: ${REVISION_LABEL[revision.outcome]}. ${revision.reason}`;
   }

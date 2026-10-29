@@ -8,6 +8,7 @@ import { goCandidates } from './related';
 import { excludeHits, scanSnapshot } from './sensitive';
 import { addRelated, collect, isPartial, unchanged, type CollectOptions } from './snapshot';
 import { finalPhase, type Phase } from './status';
+import { enforceLimits } from './style';
 import { errorMessage, isAbort } from './text';
 import type { Depth, DiagnosticInfo, Finding, Revision, SensitiveHit, Snapshot, Usage } from './types';
 import { validateFindings } from './validate';
@@ -147,6 +148,8 @@ export async function runReview(deps: ReviewDeps): Promise<ReviewResult> {
       // Quick depth: findings are explicitly not refined.
       result.findings = result.findings.map(f => ({ ...f, unrefined: true }));
     }
+
+    result.findings = result.findings.map(enforceLimits);
 
     if (!(await unchanged(snapshot))) {
       phase('stale', 'Kode berubah selama review. Hasil tidak ditampilkan sebagai pemeriksaan terbaru; jalankan review lagi.');

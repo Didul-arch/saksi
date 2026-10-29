@@ -19,7 +19,7 @@ function deps(root: string, answers: ((m: ChatMessage[]) => ModelReply)[], overr
   const d: ReviewDeps = {
     root,
     collect: { scope: { kind: 'saved-since-commit' } },
-    ctx: { intent: 'dipakai package billing', rules: [], remembered: [], preferences: { style: 'concise', language: 'id', showOptional: true } },
+    ctx: { intent: 'dipakai package billing', rules: [], remembered: [], preferences: { language: 'id', showOptional: true } },
     depth: 'standard',
     remembered: [],
     ask: async messages => {

@@ -261,19 +261,6 @@
           "maximum": 30,
           "description": "Maksimal file terkait (pemanggil/penggunaan) sebagai konteks."
         },
-        "saksi.explanationStyle": {
-          "type": "string",
-          "enum": [
-            "concise",
-            "educational"
-          ],
-          "enumDescriptions": [
-            "Ringkas.",
-            "Lebih mendidik: jelaskan aturan atau konsep yang mendasari."
-          ],
-          "default": "concise",
-          "description": "Gaya penjelasan temuan."
-        },
         "saksi.explanationLanguage": {
           "type": "string",
           "enum": [

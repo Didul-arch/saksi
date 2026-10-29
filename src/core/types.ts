@@ -69,6 +69,8 @@ export interface Snapshot {
   used: number;
   notes: string[];
   diagnostics: DiagnosticInfo[];
+  /** Project purpose from README.md, sent as context only (UR-55). */
+  project?: { path: string; text: string };
   /** True once a size/count limit stopped more changed content from being included. */
   limitReached: boolean;
 }
@@ -88,6 +90,8 @@ export interface Finding {
   impact: Impact;
   impactReason: string;
   observation: string;
+  /** The language rule or concept behind the finding, for learning (UR-56). */
+  concept: string;
   inference: string;
   missingContext: string;
   suggestion: string;

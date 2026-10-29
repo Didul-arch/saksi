@@ -4,7 +4,7 @@ import type { PromptContext } from '../../src/core/prompts';
 import { parseFinding } from '../../src/core/validate';
 import { GO_CALLER, GO_FILE, asFinding, rawFinding, snapshotOf } from './helpers';
 
-const ctx: PromptContext = { intent: '', rules: [], remembered: [], preferences: { style: 'concise', language: 'id', showOptional: true } };
+const ctx: PromptContext = { intent: '', rules: [], remembered: [], preferences: { language: 'id', showOptional: true } };
 const snap = () => snapshotOf({ 'payment.go': GO_FILE, 'caller.go': GO_CALLER }, { 'payment.go': [3, 5] });
 const finding = () => asFinding(parseFinding(rawFinding(), snap()));
 
