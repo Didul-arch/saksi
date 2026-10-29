@@ -87,7 +87,7 @@ async function pickModel(secrets: vscode.SecretStorage, endpoint: string, curren
   if (!how) return undefined;
   if (how.action === 'list') {
     try {
-      const config = { ...(await modelConfig(secrets)), endpoint, model: '' };
+      const config = { ...(await modelConfig(secrets, endpoint)), model: '' };
       const models = await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: 'Saksi: mengambil daftar model…', cancellable: true },
         (_progress, token) => {

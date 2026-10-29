@@ -49,8 +49,9 @@ export function activeModelLabel(): string {
 
 const secretName = (url: string) => 'key:' + checkEndpoint(url);
 
-export async function modelConfig(secrets: vscode.SecretStorage): Promise<ModelConfig> {
-  const settings = modelSettings();
+/** `endpoint` overrides the saved one, e.g. during setup before the new endpoint is saved. */
+export async function modelConfig(secrets: vscode.SecretStorage, endpoint?: string): Promise<ModelConfig> {
+  const settings = { ...modelSettings(), ...(endpoint ? { endpoint } : {}) };
   return { ...settings, apiKey: settings.endpoint ? await secrets.get(secretName(settings.endpoint)) : undefined };
 }
 
