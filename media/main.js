@@ -257,7 +257,12 @@ window.addEventListener('message', ({ data: s }) => {
       el('p', '', `${c.changed}/${c.total} perubahan diperiksa · ${c.related} file konteks · ${c.deleted} file dihapus · ${c.diagnostics} diagnostics editor`),
       el('p', '', c.refinement),
     );
-    if (c.rejected) body.append(el('p', 'warn', `${c.rejected} keluaran model dibuang karena rujukannya tidak cocok dengan kode.`));
+    if (c.rejected) {
+      body.append(el('p', 'warn', `${c.rejected} temuan dari model dibuang karena tidak lolos pemeriksaan:`));
+      const list = el('ul', 'warn');
+      for (const r of c.rejections) list.append(el('li', '', `${r.title} — ${r.reason}`));
+      body.append(list);
+    }
     if (c.skipped.length) {
       body.append(el('p', '', 'Dilewati:'));
       const list = el('ul');
@@ -269,7 +274,7 @@ window.addEventListener('message', ({ data: s }) => {
       for (const note of c.notes) list.append(el('li', '', note));
       body.append(list);
     }
-    if (s.phase === 'done-partial') coverage.open = true;
+    if (s.phase === 'done-partial' || s.phase === 'unvalidated') coverage.open = true;
   }
 
   restoreDrafts(saved);

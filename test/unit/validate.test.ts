@@ -58,3 +58,44 @@ describe('validateFindings', () => {
     expect(() => validateFindings({ result: [] }, snap())).toThrow(/findings/);
   });
 });
+
+describe('honest explanations are not rejected (fmt.Fprintf case)', () => {
+  const MAIN = 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Fprintf("hi!")\n}\n';
+  const s = () => snapshotOf({ 'main.go': MAIN }, { 'main.go': [1, 7] });
+  const at = { path: 'main.go', startLine: 6, endLine: 6, quote: 'fmt.Fprintf("hi!")' };
+  const fprintf = (overrides: Record<string, unknown> = {}) => ({
+    kind: 'issue',
+    title: '`fmt.Fprintf` tanpa writer',
+    observation: '`fmt.Fprintf("hi!")` hanya diberi satu argumen `string`.',
+    concept: '`fmt.Fprintf` butuh `io.Writer` sebagai argumen pertama, misalnya `os.Stdout`.',
+    inference: 'Kode ini akan gagal dikompilasi.',
+    location: at,
+    evidence: [at],
+    ...overrides,
+  });
+
+  it('accepts library names, types and predictions', () => {
+    const { findings, rejections } = validateFindings({ findings: [fprintf()] }, s());
+    expect(rejections).toEqual([]);
+    expect(findings).toHaveLength(1);
+  });
+
+  it('tolerates numeric-string lines, a missing endLine and copied "N|" prefixes', () => {
+    const loose = { path: 'main.go', startLine: '6', quote: '6|\tfmt.Fprintf("hi!")' };
+    expect(validateFindings({ findings: [fprintf({ location: loose, evidence: [loose] })] }, s()).findings).toHaveLength(1);
+  });
+
+  it('still rejects invented calls and reported test runs, and says why', () => {
+    const { findings, rejections } = validateFindings({ findings: [
+      fprintf({ observation: '`main` memanggil `printGreeting()`.' }),
+      fprintf({ inference: 'Tes gagal di CI.' }),
+      fprintf({ location: { ...at, quote: 'fmt.Println("hi!")' } }),
+    ] }, s());
+    expect(findings).toEqual([]);
+    expect(rejections.map(r => r.reason)).toEqual([
+      'pengamatan menyebut `printGreeting()` yang tidak ada di kode yang direview',
+      'mengklaim hasil tes/build yang tidak pernah dijalankan',
+      'lokasi: main.go:6: kutipan tidak cocok dengan kode di baris itu',
+    ]);
+  });
+});
