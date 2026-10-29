@@ -78,7 +78,7 @@ export function reviewSettings(root: vscode.Uri) {
 export function preferences(): Preferences {
   const c = config();
   return {
-    style: c.get<string>('explanationStyle', 'concise') === 'educational' ? 'educational' : 'concise',
+    style: (['terse', 'concise', 'educational'] as const).find(v => v === c.get<string>('explanationStyle', 'terse')) ?? 'terse',
     language: c.get<string>('explanationLanguage', 'id') === 'en' ? 'en' : 'id',
     showOptional: c.get<boolean>('showOptionalSuggestions', true),
   };

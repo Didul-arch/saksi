@@ -264,15 +264,17 @@
         "saksi.explanationStyle": {
           "type": "string",
           "enum": [
+            "terse",
             "concise",
             "educational"
           ],
           "enumDescriptions": [
-            "Ringkas.",
-            "Lebih mendidik: jelaskan aturan atau konsep yang mendasari."
+            "Super ringkas: inti masalah dulu, tanpa basa-basi, batas karakter ketat.",
+            "Ringkas: satu-dua kalimat per bagian.",
+            "Mendidik: inti masalah lalu penjelasan aturan/konsepnya."
           ],
-          "default": "concise",
-          "description": "Gaya penjelasan temuan."
+          "default": "terse",
+          "description": "Gaya penjelasan temuan. Batas panjang dicek oleh Saksi, bukan hanya diminta ke model."
         },
         "saksi.explanationLanguage": {
           "type": "string",

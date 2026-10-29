@@ -139,4 +139,20 @@ describe('runReview', () => {
     expect(second.findings[0]?.feedback).toEqual({ kind: 'intentional', reason: 'internal', remembered: true });
     expect(sent).toHaveLength(1);
   });
+
+  it('rewrites wordy findings once, then enforces limits (terse style)', async () => {
+    const wordy = rawFinding({ title: 'Hal ini perlu diperhatikan pada fungsi pembayaran yang ada di file ini', inference: 'kata '.repeat(80) });
+    const { d, sent } = deps(setup(), [
+      () => reply({ findings: [wordy] }),
+      m => {
+        const id = JSON.parse(m[1]!.content).findings[0].id;
+        return reply({ rewrites: [{ id, title: '`setPaymentNumber` tak bisa dipanggil billing', inference: 'Billing tidak bisa memanggilnya.' }] });
+      },
+    ], { depth: 'quick' });
+    d.ctx = { ...d.ctx, preferences: { ...d.ctx.preferences, style: 'terse' } };
+    const result = await runReview(d);
+    expect(sent).toHaveLength(2);
+    expect(sent[1]![0]!.content).toContain("Saksi's editor");
+    expect(result.findings[0]).toMatchObject({ title: '`setPaymentNumber` tak bisa dipanggil billing', inference: 'Billing tidak bisa memanggilnya.' });
+  });
 });

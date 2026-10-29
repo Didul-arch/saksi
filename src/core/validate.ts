@@ -1,5 +1,6 @@
 import { touches } from './git';
 import { validPath } from './policy';
+import { groundingProblems, vocabulary } from './style';
 import { clean, hash, lines } from './text';
 import type { Anchor, Certainty, Finding, Impact, Snapshot, SnapshotFile } from './types';
 
@@ -67,6 +68,8 @@ export function parseFinding(value: unknown, snapshot: Snapshot): Finding | null
     unrefined: true,
     stale: false,
   };
+  // Invented identifiers or files mean the finding is not grounded in the reviewed code (section 8.3).
+  if (groundingProblems(finding, snapshot, wordsOf(snapshot)).length) return null;
   finding.id = hash(JSON.stringify([location.path, location.startLine, location.endLine, title])).slice(0, 16);
 
   if (certainty === 'suspected' && Number.isInteger(value.diagnostic)) {
@@ -78,6 +81,17 @@ export function parseFinding(value: unknown, snapshot: Snapshot): Finding | null
     }
   }
   return finding;
+}
+
+const vocabularyCache = new WeakMap<Snapshot, { size: number; words: Set<string> }>();
+
+function wordsOf(snapshot: Snapshot): Set<string> {
+  const size = snapshot.files.length + snapshot.deleted.length;
+  const cached = vocabularyCache.get(snapshot);
+  if (cached && cached.size === size) return cached.words;
+  const words = vocabulary(snapshot);
+  vocabularyCache.set(snapshot, { size, words });
+  return words;
 }
 
 export interface Validated {

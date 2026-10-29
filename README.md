@@ -27,6 +27,7 @@ Ingin **Ctrl+I**? Klik *Atur shortcut* di panel (membuka Keyboard Shortcuts untu
 | Tindak lanjut (07) | Tanya & klarifikasi per temuan, saran + konsekuensi, feedback berlabel yang bisa diubah/diingat, salin ringkasan. Tidak ada perubahan kode otomatis. | UR-24, 26–28, 41, 42, 45 |
 | Status (08) | Belum ada perubahan · berjalan (3 tahap) · selesai dengan/tanpa temuan · sebagian · tidak dapat divalidasi · gagal · dibatalkan · kedaluwarsa; hanya temuan yang kodenya berubah yang kedaluwarsa. | UR-31–35 |
 | Data (11) | Konfirmasi & pratinjau sebelum kirim, `saksi.excludePaths` di semua tahap, deteksi heuristik informasi sensitif, redirect tidak diikuti, tanpa telemetry. | UR-36–40 |
+| Gaya & anti-ngarang | Gaya **terse** (default): inti masalah dulu, satu temuan per akar masalah, tanpa basa-basi, batas karakter per bagian. Dicek kode: pengamatan yang menyebut identifier yang tidak ada di kode atau file di luar review **ditolak**; frasa pengisi, klaim "pasti", dan klaim hasil tes/build yang tidak pernah dijalankan memicu **satu kali rewrite**, lalu dipotong paksa agar batas selalu terpenuhi. | UR-18, 19, 20, 44, 48, bagian 8.3 |
 | Companion (13) | Penanda dekat kode + Problems + Quick Fix, panel yang bisa dipakai dengan keyboard, label status/kepastian dalam teks, maskot bisa disembunyikan, gaya & bahasa penjelasan, info token per sesi. | UR-44, 46–50 |
 
 Belum ada: penerapan saran dengan preview & undo (UR-29, UR-30 — perbaikan masih manual, sesuai pilihan awal di requirement bagian 14), riwayat review lintas sesi (UR-43), dan estimasi biaya (hanya token yang dilaporkan layanan).
@@ -40,7 +41,7 @@ Belum ada: penerapan saran dengan preview & undo (UR-29, UR-30 — perbaikan mas
 | `saksi.excludePaths` | `[]` | Path/folder yang tidak boleh dikirim. |
 | `saksi.projectRules` | `[]` | Aturan proyek, ikut dikirim. |
 | `saksi.confirmBeforeSend` | `whenChanged` | `always` untuk selalu bertanya. |
-| `saksi.explanationStyle` / `saksi.explanationLanguage` | `concise` / `id` | Gaya & bahasa penjelasan. |
+| `saksi.explanationStyle` / `saksi.explanationLanguage` | `terse` / `id` | Gaya (`terse` · `concise` · `educational`) & bahasa penjelasan. |
 | `saksi.showOptionalSuggestions`, `saksi.showCompanion`, `saksi.inlineHints` | `true` | Tampilan. |
 
 ## Tech stack
@@ -67,6 +68,7 @@ src/
     prompts.ts     prompt review, refinement, percakapan
     provider.ts    adapter chat-completions
     status.ts      state machine status review (diagram 08)
+    style.ts       aturan gaya, batas panjang, cek grounding (anti-ngarang)
     staleness.ts, feedback.ts, sensitive.ts, related.ts, summary.ts, labels.ts
   controller.ts    orkestrasi di editor: dirty files, staleness, chat, feedback
   editorUi.ts      diagnostics, dekorasi, quick fix
