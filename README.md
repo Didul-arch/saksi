@@ -1,6 +1,6 @@
 # Saksi
 
-Companion reviewer kode di VS Code: review perubahan kodemu dengan model AI pilihanmu sendiri, dengan bukti yang bisa diperiksa dan ketidakpastian yang dinyatakan jujur. Saksi tidak mengubah kodemu.
+Companion **belajar pemrograman** di VS Code: review perubahan kodemu dengan model AI pilihanmu sendiri, dengan bukti yang bisa diperiksa dan ketidakpastian yang dinyatakan jujur. Saksi tidak mengubah kodemu.
 
 > Status: **0.1.0, eksperimental.** Kebutuhan & diagram ada di [`requirements/`](requirements/README.md). Tes otomatis memakai repository Git sungguhan, server HTTP lokal, dan modul `vscode` tiruan; belum diuji di VS Code sungguhan dengan model sungguhan.
 
@@ -11,7 +11,21 @@ Companion reviewer kode di VS Code: review perubahan kodemu dengan model AI pili
 3. **Saksi: Configure Model** — isi URL chat-completions, API key (opsional untuk server lokal), lalu pilih model dari daftar layanan atau ketik manual. **Saksi: Test Model Configuration** memeriksanya (diberi tahu dulu karena bisa berbayar).
 4. Tulis **tujuan perubahan** di panel Saksi bila perlu, lalu tekan **Ctrl+Alt+I** (macOS **Cmd+Alt+I**) atau tombol **Review**. Keduanya memakai tujuan, cakupan, dan kedalaman yang sama.
 5. Sebelum pengiriman pertama (atau saat layanan/cakupan/aturan/pengecualian berubah, atau ada informasi sensitif) Saksi bertanya dulu dan bisa menampilkan isi konteks yang dikirim.
-6. Buka lokasi & bukti, tanya “kenapa?”, beri klarifikasi untuk penilaian ulang, atau tandai temuan **Relevan / Keliru / Disengaja / Ditunda** (opsional diingat untuk kode yang sama).
+6. Temuan muncul **langsung di bawah baris kodenya** sebagai thread Saksi (klik ikon di gutter, atau Quick Fix *Saksi: Lihat detail, bukti & tanya*). Di thread itu kamu bisa membaca pengamatan, **konsep** yang perlu dipelajari, dan saran; membuka bukti; menulis balasan lalu pilih **Tanya** atau **Klarifikasi & nilai ulang**; dan menandai temuan lewat tombol *Tanggapi* (Relevan / Keliru / Disengaja / Ditunda, opsional diingat untuk kode yang sama).
+7. Panel Saksi merangkum semua temuan, cakupan review, dan status, diucapkan oleh si burung hantu (bisa disembunyikan dengan `saksi.showCompanion`).
+
+### Contoh endpoint
+
+Saksi bicara dengan API bentuk *chat-completions*. Contoh URL (cek dokumentasi layananmu untuk nama model):
+
+| Layanan | URL |
+| --- | --- |
+| OpenAI | `https://api.openai.com/v1/chat/completions` |
+| Anthropic (OpenAI-compatible) | `https://api.anthropic.com/v1/chat/completions` |
+| Google Gemini (OpenAI-compatible) | `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` |
+| OpenRouter | `https://openrouter.ai/api/v1/chat/completions` |
+| Ollama (lokal) | `http://localhost:11434/v1/chat/completions` |
+| LM Studio (lokal) | `http://localhost:1234/v1/chat/completions` |
 
 Ingin **Ctrl+I**? Klik *Atur shortcut* di panel (membuka Keyboard Shortcuts untuk `saksi.review`). Ctrl+I sudah dipakai fitur lain (mis. inline chat), jadi tidak dijadikan default.
 
@@ -27,6 +41,8 @@ Ingin **Ctrl+I**? Klik *Atur shortcut* di panel (membuka Keyboard Shortcuts untu
 | Tindak lanjut (07) | Tanya & klarifikasi per temuan, saran + konsekuensi, feedback berlabel yang bisa diubah/diingat, salin ringkasan. Tidak ada perubahan kode otomatis. | UR-24, 26–28, 41, 42, 45 |
 | Status (08) | Belum ada perubahan · berjalan (3 tahap) · selesai dengan/tanpa temuan · sebagian · tidak dapat divalidasi · gagal · dibatalkan · kedaluwarsa; hanya temuan yang kodenya berubah yang kedaluwarsa. | UR-31–35 |
 | Data (11) | Konfirmasi & pratinjau sebelum kirim, `saksi.excludePaths` di semua tahap, deteksi heuristik informasi sensitif, redirect tidak diikuti, tanpa telemetry. | UR-36–40 |
+| Gaya edukatif & anti-ngarang ([fitur](requirements/features/terse-style.md)) | Satu mode: edukatif tapi ringkas. Judul = akar masalah, bagian **Konsep** untuk aturan yang perlu dipelajari, saran minimal (YAGNI), chat langsung menjawab. `README.md` dipakai sebagai konteks proyek. Dicek kode: identifier/file karangan dan klaim hasil tes/build yang tidak pernah dijalankan membuat temuan **ditolak**. | UR-51–56 |
+| Review inline & pet ([fitur](requirements/features/inline-review-ui.md)) | Satu thread inline per temuan (Comments API): detail, konsep, tautan bukti, tanya/klarifikasi, dan tanggapan langsung di bawah kode; thread hilang saat kodenya berubah. Teks model tidak pernah jadi tautan atau markdown aktif. Pet berekspresi sesuai status (diam, berpikir, siaga, senang, khawatir) dengan status sebagai gelembung ucapan; tanpa animasi bila reduced motion. | UR-57, UR-58 |
 | Companion (13) | Penanda dekat kode + Problems + Quick Fix, panel yang bisa dipakai dengan keyboard, label status/kepastian dalam teks, maskot bisa disembunyikan, gaya & bahasa penjelasan, info token per sesi. | UR-44, 46–50 |
 
 Belum ada: penerapan saran dengan preview & undo (UR-29, UR-30 — perbaikan masih manual, sesuai pilihan awal di requirement bagian 14), riwayat review lintas sesi (UR-43), dan estimasi biaya (hanya token yang dilaporkan layanan).
@@ -40,7 +56,7 @@ Belum ada: penerapan saran dengan preview & undo (UR-29, UR-30 — perbaikan mas
 | `saksi.excludePaths` | `[]` | Path/folder yang tidak boleh dikirim. |
 | `saksi.projectRules` | `[]` | Aturan proyek, ikut dikirim. |
 | `saksi.confirmBeforeSend` | `whenChanged` | `always` untuk selalu bertanya. |
-| `saksi.explanationStyle` / `saksi.explanationLanguage` | `concise` / `id` | Gaya & bahasa penjelasan. |
+| `saksi.explanationLanguage` | `id` | Bahasa penjelasan (`id` / `en`). |
 | `saksi.showOptionalSuggestions`, `saksi.showCompanion`, `saksi.inlineHints` | `true` | Tampilan. |
 
 ## Tech stack
@@ -67,6 +83,7 @@ src/
     prompts.ts     prompt review, refinement, percakapan
     provider.ts    adapter chat-completions
     status.ts      state machine status review (diagram 08)
+    style.ts       batas panjang & cek grounding (anti-ngarang)
     staleness.ts, feedback.ts, sensitive.ts, related.ts, summary.ts, labels.ts
   controller.ts    orkestrasi di editor: dirty files, staleness, chat, feedback
   editorUi.ts      diagnostics, dekorasi, quick fix

@@ -101,14 +101,30 @@
         "category": "Saksi"
       },
       {
-        "command": "saksi.askFinding",
-        "title": "Ask About Finding",
-        "category": "Saksi"
-      },
-      {
         "command": "saksi.markFinding",
         "title": "Mark Finding",
         "category": "Saksi"
+      },
+      {
+        "command": "saksi.openEvidence",
+        "title": "Open Evidence",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.inlineAsk",
+        "title": "Tanya",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.inlineClarify",
+        "title": "Klarifikasi & nilai ulang",
+        "category": "Saksi"
+      },
+      {
+        "command": "saksi.inlineFeedback",
+        "title": "Tanggapi temuan",
+        "category": "Saksi",
+        "icon": "$(feedback)"
       }
     ],
     "menus": {
@@ -118,11 +134,23 @@
           "when": "false"
         },
         {
-          "command": "saksi.askFinding",
+          "command": "saksi.markFinding",
           "when": "false"
         },
         {
-          "command": "saksi.markFinding",
+          "command": "saksi.openEvidence",
+          "when": "false"
+        },
+        {
+          "command": "saksi.inlineAsk",
+          "when": "false"
+        },
+        {
+          "command": "saksi.inlineClarify",
+          "when": "false"
+        },
+        {
+          "command": "saksi.inlineFeedback",
           "when": "false"
         }
       ],
@@ -131,6 +159,25 @@
           "command": "saksi.reviewSelection",
           "when": "editorHasSelection && isWorkspaceTrusted",
           "group": "saksi@1"
+        }
+      ],
+      "comments/commentThread/context": [
+        {
+          "command": "saksi.inlineAsk",
+          "group": "inline@1",
+          "when": "commentController == saksi && commentThread == saksi-finding"
+        },
+        {
+          "command": "saksi.inlineClarify",
+          "group": "inline@2",
+          "when": "commentController == saksi && commentThread == saksi-finding"
+        }
+      ],
+      "comments/commentThread/title": [
+        {
+          "command": "saksi.inlineFeedback",
+          "group": "navigation",
+          "when": "commentController == saksi && commentThread == saksi-finding"
         }
       ]
     },
@@ -260,19 +307,6 @@
           "minimum": 0,
           "maximum": 30,
           "description": "Maksimal file terkait (pemanggil/penggunaan) sebagai konteks."
-        },
-        "saksi.explanationStyle": {
-          "type": "string",
-          "enum": [
-            "concise",
-            "educational"
-          ],
-          "enumDescriptions": [
-            "Ringkas.",
-            "Lebih mendidik: jelaskan aturan atau konsep yang mendasari."
-          ],
-          "default": "concise",
-          "description": "Gaya penjelasan temuan."
         },
         "saksi.explanationLanguage": {
           "type": "string",

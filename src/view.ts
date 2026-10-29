@@ -30,16 +30,24 @@ export class Companion implements vscode.WebviewViewProvider, View {
 </head>
 <body>
 <header>
-  <svg id="pet" class="pet" aria-hidden="true" width="36" height="36" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M4 8V3l5 3h6l5-3v5c1 2 1 5 0 8-1 3-4 5-8 5s-7-2-8-5c-1-3-1-6 0-8Z"/><circle cx="8" cy="11" r="2" fill="currentColor"/><circle cx="16" cy="11" r="2" fill="currentColor"/><path fill="currentColor" d="m10 15 2 3 2-3z"/></svg>
-  <div>
-    <div class="brand">saksi</div>
+  <div class="brand-row">
+    <span class="brand">saksi</span>
     <button id="configure" class="link" type="button" title="Atur layanan & model"></button>
   </div>
+  <div class="companion">
+    <svg id="pet" class="pet" aria-hidden="true" width="56" height="56" viewBox="0 0 24 24">
+      <path class="body" d="M4 8V3l5 3h6l5-3v5c1 2 1 5 0 8-1 3-4 5-8 5s-7-2-8-5c-1-3-1-6 0-8Z"/>
+      <g class="eyes open"><circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/></g>
+      <g class="eyes happy"><path d="M6 11.6q2-2.6 4 0M14 11.6q2-2.6 4 0"/></g>
+      <g class="brows"><path d="M5.6 7.6 9.6 8.6M18.4 7.6 14.4 8.6"/></g>
+      <path class="beak" d="m10 15 2 3 2-3z"/>
+    </svg>
+    <section id="status" class="status" aria-live="polite">
+      <p id="phase" class="phase"></p>
+      <p id="note" class="note"></p>
+    </section>
+  </div>
 </header>
-<section class="status" aria-live="polite">
-  <p id="phase" class="phase"></p>
-  <p id="note" class="note"></p>
-</section>
 <form id="form">
   <label for="intent">Tujuan perubahan <span class="muted">opsional · berlaku untuk tombol & shortcut</span></label>
   <textarea id="intent" rows="2" maxlength="2000" placeholder="Contoh: fungsi ini akan dipakai oleh package billing."></textarea>

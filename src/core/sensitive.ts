@@ -31,6 +31,7 @@ export function scanSnapshot(snapshot: Snapshot): SensitiveHit[] {
     ...snapshot.files.flatMap(file => scanText(file.path, file.content)),
     // Removed lines are sent too, as deletion context.
     ...snapshot.deleted.flatMap(file => scanText(file.path, file.patch).map(hit => ({ ...hit, line: 0 }))),
+    ...(snapshot.project && !snapshot.files.some(f => f.path === snapshot.project?.path) ? scanText(snapshot.project.path, snapshot.project.text) : []),
   ];
 }
 
@@ -45,6 +46,10 @@ export function excludeHits(snapshot: Snapshot, hits: readonly SensitiveHit[]): 
   for (const file of snapshot.deleted.filter(f => paths.has(f.path))) {
     snapshot.skipped.push({ path: file.path, reason, changed: true });
     snapshot.used -= file.patch.length;
+  }
+  if (snapshot.project && paths.has(snapshot.project.path)) {
+    snapshot.used -= snapshot.project.text.length;
+    snapshot.project = undefined;
   }
   snapshot.files = snapshot.files.filter(f => !paths.has(f.path));
   snapshot.deleted = snapshot.deleted.filter(f => !paths.has(f.path));

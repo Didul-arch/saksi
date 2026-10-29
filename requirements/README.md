@@ -33,6 +33,8 @@ Dokumen ini **bukan** daftar fitur yang sudah jadi dan **bukan** spesifikasi tek
 requirements/
 ├── README.md                 ← kamu di sini
 ├── user_requirement.md       ← kebutuhan pengguna (UR-01…UR-50, UA-01…UA-24)
+├── features/                ← requirement per fitur (draft sebelum koding)
+│   └── terse-style.md
 └── diagrams/
     ├── README.md             ← indeks diagram + cara membaca
     ├── 01-system-context.md

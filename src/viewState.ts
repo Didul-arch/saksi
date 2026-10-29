@@ -28,6 +28,7 @@ export interface ViewFinding {
   flags: string[];
   location: string;
   observation: string;
+  concept: string;
   inference: string;
   confirmation: string;
   missingContext: string;
@@ -119,6 +120,7 @@ function viewFinding(f: Finding, input: StateInput): ViewFinding {
     flags,
     location: `${f.location.path}:${f.location.startLine}${f.location.endLine > f.location.startLine ? `–${f.location.endLine}` : ''}`,
     observation: f.observation,
+    concept: f.concept,
     inference: f.inference,
     confirmation: f.confirmation ? `${f.confirmation.source} melaporkan error di baris ${f.confirmation.line}: ${f.confirmation.message}` : '',
     missingContext: f.missingContext,
