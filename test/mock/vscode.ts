@@ -51,9 +51,25 @@ export class Diagnostic {
 export class ThemeColor { constructor(readonly id: string) {} }
 export class MarkdownString {
   value = '';
-  isTrusted = false;
+  isTrusted: boolean | { enabledCommands: string[] } = false;
   supportHtml = false;
-  appendText(text: string): this { this.value += text; return this; }
+  /** Escapes markdown like VS Code does, so tests can check that model text stays inert. */
+  appendText(text: string): this { this.value += text.replace(/[\\`*_{}[\]()#+\-.!|<>]/g, '\\$&'); return this; }
+  appendMarkdown(text: string): this { this.value += text; return this; }
+}
+export enum CommentMode { Editing = 0, Preview = 1 }
+export enum CommentThreadCollapsibleState { Collapsed = 0, Expanded = 1 }
+
+export interface MockThread {
+  uri: Uri;
+  range: Range;
+  comments: { body: MarkdownString; author: { name: string } }[];
+  canReply: boolean;
+  label?: string;
+  contextValue?: string;
+  collapsibleState: CommentThreadCollapsibleState;
+  disposed: boolean;
+  dispose(): void;
 }
 export class CodeActionKind { static readonly QuickFix = new CodeActionKind(); }
 export class CodeAction {
@@ -77,6 +93,7 @@ export const mock = {
   answers: [] as { match: string; answer: string | undefined }[],
   prompts: [] as string[],
   diagnostics: new Map<string, Diagnostic[]>(),
+  threads: [] as MockThread[],
   commands: new Map<string, (...args: unknown[]) => unknown>(),
   webviewProviders: new Map<string, { resolveWebviewView(view: unknown): void }>(),
   clipboard: '',
@@ -89,6 +106,7 @@ export const mock = {
     this.answers = [];
     this.prompts = [];
     this.diagnostics.clear();
+    this.threads = [];
     this.commands.clear();
     this.webviewProviders.clear();
     this.clipboard = '';
@@ -163,6 +181,21 @@ export const languages = {
   }),
   registerCodeActionsProvider: () => disposable,
   getDiagnostics: () => [],
+};
+
+export const comments = {
+  createCommentController: () => ({
+    options: {},
+    createCommentThread: (uri: Uri, range: Range, list: MockThread['comments']) => {
+      const thread: MockThread = {
+        uri, range, comments: list, canReply: true, collapsibleState: CommentThreadCollapsibleState.Collapsed, disposed: false,
+        dispose() { this.disposed = true; },
+      };
+      mock.threads.push(thread);
+      return thread;
+    },
+    dispose: () => undefined,
+  }),
 };
 
 export const commands = {

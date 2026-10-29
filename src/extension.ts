@@ -6,7 +6,7 @@ import { clearKey, configure, setKey, testConnection } from './setup';
 import { Companion } from './view';
 
 export function activate(context: vscode.ExtensionContext): void {
-  const editorUi = new EditorUi();
+  const editorUi = new EditorUi(vscode.Uri.joinPath(context.extensionUri, 'media', 'owl.svg'));
   const previewer = new PreviewProvider();
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 20);
   status.command = 'saksi.show';
@@ -38,9 +38,13 @@ export function activate(context: vscode.ExtensionContext): void {
   register('saksi.clearApiKey', () => clearKey(context.secrets));
   register('saksi.testConnection', () => testConnection(context.secrets));
   register('saksi.forgetFeedback', () => controller.forgetAllFeedback());
-  register('saksi.showFinding', (id: string) => controller.select(id));
-  register('saksi.askFinding', (id: string) => controller.askFromCommand(id));
+  register('saksi.showFinding', (id: string) => controller.open(id));
+  register('saksi.openEvidence', (id: string, index: number) => controller.open(id, index));
   register('saksi.markFinding', (id: string, kind: 'intentional' | 'wrong') => controller.setFeedback(id, kind));
+  const threadId = (thread: vscode.CommentThread) => editorUi.idOf(thread);
+  register('saksi.inlineAsk', (reply: vscode.CommentReply) => { const id = threadId(reply.thread); return id && controller.ask(id, reply.text, 'question'); });
+  register('saksi.inlineClarify', (reply: vscode.CommentReply) => { const id = threadId(reply.thread); return id && controller.ask(id, reply.text, 'clarification'); });
+  register('saksi.inlineFeedback', (thread: vscode.CommentThread) => { const id = threadId(thread); return id && controller.feedbackFromThread(id); });
 
   const watcher = vscode.workspace.createFileSystemWatcher('**/*');
   const changed = (uri: vscode.Uri) => void controller.onChanged(uri);

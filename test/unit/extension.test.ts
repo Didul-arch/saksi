@@ -163,4 +163,40 @@ describe('extension (mocked VS Code)', () => {
     expect(mock.clipboard).toContain('Fungsi perlu diekspor?');
     expect(requests).toBe(before);
   });
+
+  it('shows each finding as an inline thread and chats inside it (UR-57, UA-32, UA-33, UA-34)', async () => {
+    const root = repoWithChange();
+    const ui = start(root);
+    mock.answers.push({ match: 'Kirim konteks review', answer: 'Kirim' });
+    mock.settings['saksi.reviewDepth'] = 'quick';
+    replies.push(() => ({ findings: [rawFinding({ concept: 'Huruf kecil = unexported.', inference: 'Lihat [klik](command:workbench.action.terminal.new).' })] }));
+    await vscode.commands.executeCommand('saksi.review');
+    const live = () => mock.threads.filter(t => !t.disposed);
+    expect(live()).toHaveLength(1);
+    const thread = live()[0]!;
+    expect(thread.uri.fsPath).toBe(path.join(root, 'payment.go'));
+    expect(thread.range.start.line).toBe(2);
+    expect(thread.label).toBe('Saksi · Dugaan masalah');
+    const body = thread.comments[0]!.body;
+    expect(body.value).toContain('**Konsep:** Huruf kecil = unexported\\.');
+    expect(body.value).toContain('command:saksi.openEvidence?');
+    expect(body.value).not.toContain('](command:workbench');
+    expect(body.isTrusted).toEqual({ enabledCommands: ['saksi.openEvidence'] });
+
+    // Quick fix "Lihat detail" expands the thread.
+    await vscode.commands.executeCommand('saksi.showFinding', ui.last().findings[0]!.id);
+    expect(thread.collapsibleState).toBe(1);
+
+    // Inline reply goes to the same finding and appears in the same thread.
+    replies.push(() => ({ answer: 'Karena package lain tidak bisa memanggilnya.' }));
+    await vscode.commands.executeCommand('saksi.inlineAsk', { thread, text: 'Kenapa?' });
+    expect(thread.comments.map(c => c.author.name)).toEqual(['Saksi', 'Kamu', 'Saksi']);
+    expect(thread.comments[2]!.body.value).toContain('Karena package lain tidak bisa memanggilnya');
+
+    // Editing the code removes the inline thread.
+    write(root, { 'payment.go': GO_FILE + '// edit\n' });
+    mock.watchers[0]!.change.fire(Uri.file(path.join(root, 'payment.go')));
+    await settle();
+    expect(live()).toHaveLength(0);
+  });
 });

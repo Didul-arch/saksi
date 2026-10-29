@@ -40,6 +40,7 @@ export class Controller implements vscode.Disposable {
   private readonly pending = new Set<string>();
   private running?: AbortController;
   private selectedId?: string;
+  private revealId?: string;
   private readonly usage = emptyUsage();
   private view?: View;
 
@@ -277,17 +278,13 @@ export class Controller implements vscode.Disposable {
       return;
     }
     const range = this.editorUi.range(anchor);
+    if (index < 0) this.revealId = id;
     const editor = await vscode.window.showTextDocument(doc, { preview: true });
     editor.selection = new vscode.Selection(range.start, range.end);
     editor.revealRange(range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
     this.publish();
   }
 
-  async select(id: string): Promise<void> {
-    this.selectedId = id;
-    this.publish();
-    await this.view?.show();
-  }
 
   private feedbackKey(root: string): string {
     return `saksi.feedback:${root}`;
@@ -319,10 +316,20 @@ export class Controller implements vscode.Disposable {
     this.publish();
   }
 
-  async askFromCommand(id: string): Promise<void> {
-    const text = await vscode.window.showInputBox({ title: 'Saksi · Tanya tentang temuan ini', prompt: 'Contoh: kenapa ini masalah? dampaknya apa? bagaimana kalau sengaja begini?', ignoreFocusOut: true });
-    if (text?.trim()) await this.ask(id, text, 'question');
-    await this.select(id);
+  /** Feedback from an inline thread: label, optional reason, and whether to remember it (D3). */
+  async feedbackFromThread(id: string): Promise<void> {
+    const finding = this.findings.find(f => f.id === id);
+    if (!finding) return;
+    const kinds: { label: string; value: FeedbackKind | null }[] = (Object.keys(FEEDBACK_LABEL) as FeedbackKind[])
+      .map(value => ({ label: FEEDBACK_LABEL[value], value, picked: finding.feedback?.kind === value }));
+    if (finding.feedback) kinds.push({ label: 'Hapus tanggapan', value: null });
+    const picked = await vscode.window.showQuickPick(kinds, { title: `Saksi · Tanggapi: ${finding.title}` });
+    if (!picked) return;
+    if (!picked.value) return this.setFeedback(id, null);
+    const reason = await vscode.window.showInputBox({ title: `Saksi · ${picked.label}`, prompt: 'Alasan (opsional). Enter untuk lanjut.', value: finding.feedback?.reason ?? '' });
+    if (reason === undefined) return;
+    const keep = await vscode.window.showQuickPick([{ label: 'Ingat untuk kode yang sama', keep: true }, { label: 'Hanya untuk review ini', keep: false }], { title: 'Saksi · Ingat tanggapan ini?' });
+    if (keep) await this.setFeedback(id, picked.value, reason, keep.keep);
   }
 
   /** Follow-up question or clarification about one finding; never changes code (UR-24, UR-26, UR-28). */
@@ -397,7 +404,8 @@ export class Controller implements vscode.Disposable {
     const open = this.findings.filter(f => !f.stale).length;
     this.status.text = running ? '$(sync~spin) Saksi' : `$(eye) Saksi${open ? ` · ${open}` : ''}`;
     this.status.tooltip = `Saksi: ${PHASE_LABEL[this.phase]}\n${activeModelLabel()}`;
-    this.editorUi.render(this.findings, this.result?.snapshot, inlineHints());
+    this.editorUi.render({ findings: this.findings, snapshot: this.result?.snapshot, hints: inlineHints(), chats: this.chats, pending: this.pending, reveal: this.revealId });
+    this.revealId = undefined;
     this.view?.update(buildViewState({
       phase: this.phase, note: this.note, running, intent: this.intent, scopeKind: this.scopeKind, depth: this.depth,
       result: this.result, findings: this.findings, dropped: this.dropped, chats: this.chats, pending: this.pending,
@@ -415,8 +423,6 @@ export class Controller implements vscode.Disposable {
     this.running?.abort();
   }
 }
-
-export const feedbackLabel = (kind: FeedbackKind): string => FEEDBACK_LABEL[kind];
 
 async function chooseRoot(signal: AbortSignal): Promise<string | undefined> {
   const folders = vscode.workspace.workspaceFolders ?? [];

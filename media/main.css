@@ -6,13 +6,54 @@ body {
   line-height: 1.45;
 }
 
-header { display: flex; gap: 10px; align-items: center; padding: 12px 0 4px; }
-.pet { flex: none; color: var(--vscode-foreground); }
+header { padding: 12px 0 4px; }
+.brand-row { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
 .brand { font-weight: 700; font-size: 1.15em; letter-spacing: 0.02em; }
+.companion { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; }
+
+/* Pet (UR-58): hidden entirely when the user turns it off; status text stays. */
+.pet { flex: none; display: none; color: var(--vscode-foreground); overflow: visible; }
+body.with-pet .pet { display: block; }
+.pet .body { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.pet .eyes.open, .pet .beak { fill: currentColor; }
+.pet .eyes.happy path, .pet .brows path { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.pet .eyes.happy, .pet .brows { display: none; }
+body[data-mood="happy"] .pet .eyes.open { display: none; }
+body[data-mood="happy"] .pet .eyes.happy { display: inline; }
+body[data-mood="worried"] .pet .brows { display: inline; }
+body[data-mood="worried"] .pet { color: var(--vscode-editorWarning-foreground); }
+body[data-mood="alert"] .pet .eyes.open circle { r: 2.6; }
+.pet .eyes.open { transform-origin: 12px 11px; }
+body[data-mood="idle"] .pet .eyes.open { animation: blink 5s infinite; }
+body[data-mood="thinking"] .pet .eyes.open { animation: look 1.8s ease-in-out infinite; }
+body[data-mood="thinking"] .pet { animation: tilt 1.8s ease-in-out infinite; }
+body[data-mood="happy"] .pet { animation: hop 0.6s ease-out 2; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+@keyframes look { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-1.2px); } 70% { transform: translateX(1.2px); } }
+@keyframes tilt { 50% { transform: rotate(-6deg); } }
+@keyframes hop { 50% { transform: translateY(-4px); } }
+
+/* With the pet, the status reads as its speech bubble. */
+body.with-pet .status {
+  position: relative;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, transparent));
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+body.with-pet .status::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  border: 6px solid transparent;
+  border-left: 0;
+  border-right-color: var(--vscode-widget-border, var(--vscode-editorWidget-background));
+}
 h2 { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 0 6px; color: var(--vscode-descriptionForeground); }
 h3 { font-size: 1em; margin: 6px 0; }
 
-.status { margin: 6px 0 10px; }
+.status { margin: 0 0 10px; flex: 1; min-width: 0; }
 .phase { font-weight: 600; margin: 0; }
 .phase.failed, .phase.unvalidated { color: var(--vscode-errorForeground); }
 .phase.done-partial, .phase.stale, .phase.cancelled { color: var(--vscode-editorWarning-foreground); }
@@ -88,6 +129,11 @@ fieldset.feedback legend { font-weight: 600; padding: 0; }
 
 footer { margin-top: 16px; border-top: 1px solid var(--vscode-panel-border, transparent); padding-top: 8px; }
 
-body.busy .pet { animation: tilt 1.6s ease-in-out infinite; }
-@keyframes tilt { 50% { transform: rotate(-8deg); } }
-@media (prefers-reduced-motion: reduce) { body.busy .pet { animation: none; } }
+details.fold > summary { list-style: none; cursor: pointer; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary h3::before { content: "▸ "; color: var(--vscode-descriptionForeground); }
+details.fold[open] > summary h3::before { content: "▾ "; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pet, .pet * { animation: none !important; }
+}
