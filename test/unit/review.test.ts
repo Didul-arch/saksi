@@ -99,6 +99,8 @@ describe('runReview', () => {
 
     const invalid = await runReview(deps(setup(), [() => reply({ findings: [rawFinding({ evidence: [] })] })]).d);
     expect(invalid.phase).toBe('unvalidated');
+    expect(invalid.note).toContain('bukti harus berisi 1–5 rujukan');
+    expect(invalid.rejections).toEqual([{ title: 'Fungsi perlu diekspor?', reason: 'bukti harus berisi 1–5 rujukan' }]);
 
     const failed = await runReview(deps(setup(), [() => { throw new Error('HTTP 429'); }]).d);
     expect(failed.phase).toBe('failed');

@@ -11,7 +11,7 @@ import { finalPhase, type Phase } from './status';
 import { enforceLimits } from './style';
 import { errorMessage, isAbort } from './text';
 import type { Depth, DiagnosticInfo, Finding, Revision, SensitiveHit, Snapshot, Usage } from './types';
-import { validateFindings } from './validate';
+import { validateFindings, type Rejection } from './validate';
 
 export type SendDecision = 'send' | 'cancel' | 'exclude-sensitive';
 
@@ -45,6 +45,7 @@ export interface ReviewResult {
   findings: Finding[];
   dropped: { finding: Finding; revision: Revision }[];
   rejected: number;
+  rejections: Rejection[];
   refinement: { rounds: number; stopReason: StopReason; limitHit: boolean; error?: string };
   usage: Usage;
 }
@@ -71,7 +72,7 @@ export async function runReview(deps: ReviewDeps): Promise<ReviewResult> {
   const { signal } = deps;
   const usage = emptyUsage();
   const result: ReviewResult = {
-    phase: 'reading-context', note: '', findings: [], dropped: [], rejected: 0,
+    phase: 'reading-context', note: '', findings: [], dropped: [], rejected: 0, rejections: [],
     refinement: { rounds: 0, stopReason: 'not-run', limitHit: false }, usage,
   };
   const phase = (next: Phase, note: string) => {
@@ -127,6 +128,7 @@ export async function runReview(deps: ReviewDeps): Promise<ReviewResult> {
     const validated = validateFindings(await ask(reviewMessages(snapshot, ctx)), snapshot);
     result.findings = validated.findings;
     result.rejected = validated.rejected;
+    result.rejections = validated.rejections;
 
     const maxRounds = ROUNDS_BY_DEPTH[deps.depth];
     if (result.findings.length && maxRounds > 0) {
@@ -185,7 +187,10 @@ function cancelled(result: ReviewResult, phase: (p: Phase, n: string) => void, s
 function finalNote(phase: Phase, result: ReviewResult, snapshot: Snapshot): string {
   const parts: string[] = [];
   const count = result.findings.length;
-  if (phase === 'unvalidated') parts.push(`${result.rejected} temuan dari model tidak punya rujukan yang cocok dengan kode, jadi tidak ditampilkan. Review ini belum memberi kesimpulan yang dapat diandalkan.`);
+  if (phase === 'unvalidated') {
+    const why = [...new Set(result.rejections.map(r => r.reason))].slice(0, 2).join('; ');
+    parts.push(`${result.rejected} temuan dari model tidak lolos pemeriksaan, jadi tidak ditampilkan (${why}). Review ini belum memberi kesimpulan yang dapat diandalkan; detailnya ada di Cakupan review.`);
+  }
   else if (phase === 'done-clean') parts.push('Tidak ada temuan dalam cakupan yang berhasil diperiksa. Ini bukan jaminan kode bebas bug.');
   else if (count) parts.push(`${count} hal untuk diperiksa. Buka bukti sebelum memutuskan.`);
   else parts.push('Tidak ada temuan dalam bagian yang berhasil diperiksa.');
@@ -198,6 +203,6 @@ function finalNote(phase: Phase, result: ReviewResult, snapshot: Snapshot): stri
   }
   if (result.refinement.limitHit) parts.push('Batas kedalaman pemeriksaan ulang tercapai.');
   if (result.dropped.length) parts.push(`${result.dropped.length} dugaan awal dibatalkan setelah diperiksa ulang.`);
-  if (result.rejected && phase !== 'unvalidated') parts.push(`${result.rejected} keluaran model dibuang karena rujukannya tidak valid.`);
+  if (result.rejected && phase !== 'unvalidated') parts.push(`${result.rejected} keluaran model dibuang karena tidak lolos pemeriksaan; detailnya ada di Cakupan review.`);
   return parts.join(' ');
 }

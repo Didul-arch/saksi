@@ -133,6 +133,7 @@ function textDocument(uri: Uri) {
 export const window = {
   activeTextEditor: undefined as unknown,
   visibleTextEditors: [] as unknown[],
+  createOutputChannel: () => ({ appendLine: () => undefined, dispose: () => undefined }),
   createStatusBarItem: () => ({ text: '', tooltip: '', command: '', show: () => undefined, dispose: () => undefined }),
   createTextEditorDecorationType: () => disposable,
   showInformationMessage: answer,

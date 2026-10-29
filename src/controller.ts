@@ -42,6 +42,8 @@ export class Controller implements vscode.Disposable {
   private selectedId?: string;
   private revealId?: string;
   private readonly usage = emptyUsage();
+  /** Local log of raw model replies and rejections, so a failed review can be diagnosed (View → Output → Saksi). */
+  private readonly log = vscode.window.createOutputChannel('Saksi');
   private view?: View;
 
   constructor(
@@ -119,6 +121,7 @@ export class Controller implements vscode.Disposable {
         remembered,
         ask: async (messages, signal) => {
           const reply = await chat(config, messages, signal);
+          this.log.appendLine(`[${new Date().toISOString()}] Respons ${config.model} (${reply.content.length} karakter):\n${reply.content.slice(0, 20_000)}\n`);
           addUsage(this.usage, reply);
           return reply;
         },
@@ -132,6 +135,8 @@ export class Controller implements vscode.Disposable {
         signal: controller.signal,
       });
       this.result = result;
+      this.log.appendLine(`[${new Date().toISOString()}] ${PHASE_LABEL[result.phase]}: ${result.findings.length} temuan, ${result.rejected} dibuang.`);
+      for (const r of result.rejections) this.log.appendLine(`  dibuang: ${r.title} — ${r.reason}`);
       this.findings = result.findings;
       this.dropped = result.dropped;
       this.phase = result.phase;
@@ -421,6 +426,7 @@ export class Controller implements vscode.Disposable {
 
   dispose(): void {
     this.running?.abort();
+    this.log.dispose();
   }
 }
 

@@ -64,6 +64,7 @@ export interface ViewState {
     notes: string[];
     refinement: string;
     rejected: number;
+    rejections: { title: string; reason: string }[];
   };
   findings: ViewFinding[];
   dropped: { title: string; reason: string }[];
@@ -159,6 +160,7 @@ export function buildViewState(input: StateInput): ViewState {
       notes: snapshot.notes,
       refinement: refinementText(input.result),
       rejected: input.result.rejected,
+      rejections: input.result.rejections,
     } : null,
     findings: input.findings.map(f => viewFinding(f, input)),
     dropped: input.dropped.map(d => ({ title: d.finding.title, reason: d.revision.reason })),
